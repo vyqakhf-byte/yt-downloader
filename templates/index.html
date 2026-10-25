@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Downloader</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #111827; color: #f9fafb; margin: 0; }
+  main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  p { color: #d1d5db; }
+  .row { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  input[type="text"] { flex: 1; min-width: 220px; padding: 10px; border-radius: 8px; border: 1px solid #374151; background: #1f2937; color: #fff; }
+  select { padding: 10px; border-radius: 8px; border: 1px solid #374151; background: #1f2937; color: #fff; }
+  button { padding: 10px 18px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; font-size: 15px; }
+  button:hover { background: #1d4ed8; }
+  #status { min-height: 20px; color: #fbbf24; }
+  #preview { background: #1f2937; border-radius: 12px; padding: 16px; margin-top: 8px; }
+  #preview img { width: 100%; border-radius: 8px; }
+  #preview h2 { font-size: 18px; margin: 12px 0 4px; }
+  .note { font-size: 13px; color: #9ca3af; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Video Downloader</h1>
+  <p>Paste a video link, pick a quality, and download.</p>
+  <div class="row">
+    <input id="url" type="text" placeholder="Paste video link here...">
+    <button id="fetchBtn">Get Video</button>
+  </div>
+  <p id="status"></p>
+  <section id="preview" hidden>
+    <img id="thumb" alt="">
+    <h2 id="title"></h2>
+    <p id="meta"></p>
+    <div class="row">
+      <select id="quality">
+        <option value="best">Best quality</option>
+        <option value="1080">1080p</option>
+        <option value="720" selected>720p</option>
+        <option value="480">480p</option>
+        <option value="360">360p</option>
+        <option value="audio">Audio only (MP3)</option>
+      </select>
+      <button id="dlBtn">Download</button>
+    </div>
+  </section>
+  <p class="note">Only download videos you own or that are free to download. Respect the creator's rights.</p>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function fmt(seconds) {
+    if (!seconds) return "";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  $("fetchBtn").onclick = async () => {
+    const url = $("url").value.trim();
+    if (!url) { $("status").textContent = "Please paste a video link first."; return; }
+    $("status").textContent = "Reading video info...";
+    $("preview").hidden = true;
+    try {
+      const res = await fetch("/api/info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not read video.");
+      $("thumb").src = data.thumbnail;
+      $("title").textContent = data.title;
+      $("meta").textContent = [data.uploader, fmt(data.duration)].filter(Boolean).join(" • ");
+      $("preview").hidden = false;
+      $("status").textContent = "";
+    } catch (e) {
+      $("status").textContent = e.message;
+    }
+  };
+
+  $("dlBtn").onclick = async () => {
+    const url = $("url").value.trim();
+    const quality = $("quality").value;
+    $("status").textContent = "Downloading... this can take a while for long videos.";
+    try {
+      const res = await fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, quality })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Download failed.");
+      }
+      const blob = await res.blob();
+      let filename = "video";
+      const disp = res.headers.get("Content-Disposition");
+      const m = disp && disp.match(/filename="?([^";]+)"?/);
+      if (m) filename = m[1];
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      $("status").textContent = "Done! Your download has started.";
+    } catch (e) {
+      $("status").textContent = e.message;
+    }
+  };
+</script>
+</body>
+</html>
