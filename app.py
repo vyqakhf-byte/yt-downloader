@@ -88,7 +88,7 @@ def base_opts():
         # needed for most videos.
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "ios", "tv", "web"],
+                "player_client": ["android", "ios", "tv", "tv_embedded", "web_creator", "web", "mediaconnect"],
             },
         },
     }
