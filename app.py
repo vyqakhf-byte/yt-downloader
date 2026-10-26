@@ -82,13 +82,13 @@ def base_opts():
                           "Chrome/126.0 Safari/537.36",
         },
         # Bot-check bypass: YouTube's web client often answers a server IP
-        # with "Sign in to confirm you're not a bot", while the Android
-        # client usually does not. yt-dlp tries these in order and falls
-        # back to web if Android cannot serve a video, so no cookies are
+        # with "Sign in to confirm you're not a bot", while the app-based
+        # clients usually do not. yt-dlp tries these in order and falls
+        # back to web if the others cannot serve a video, so no cookies are
         # needed for most videos.
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "web"],
+                "player_client": ["android", "ios", "tv", "web"],
             },
         },
     }
