@@ -107,6 +107,7 @@ def base_opts():
             break
     if cookiefile:
         opts["cookiefile"] = cookiefile
+    ffmpeg_location = _ffmpeg_location()
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
     return opts
