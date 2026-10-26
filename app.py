@@ -107,6 +107,19 @@ def base_opts():
             break
     if cookiefile:
         opts["cookiefile"] = cookiefile
+    if cookiefile:
+        try:
+            with open(cookiefile, "r", encoding="utf-8", errors="ignore") as fh:
+                _n = sum(1 for _ in fh)
+        except OSError:
+            _n = -1
+        print(f"[cookies] using {cookiefile} ({_n} lines)", flush=True)
+    else:
+        print("[cookies] no cookies file found", flush=True)
+    try:
+        print(f"[cookies] /etc/secrets contents: {os.listdir('/etc/secrets')}", flush=True)
+    except OSError as exc:
+        print(f"[cookies] /etc/secrets not readable: {exc}", flush=True)
     ffmpeg_location = _ffmpeg_location()
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
