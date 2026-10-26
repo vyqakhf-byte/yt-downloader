@@ -81,6 +81,16 @@ def base_opts():
                           "AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/126.0 Safari/537.36",
         },
+        # Bot-check bypass: YouTube's web client often answers a server IP
+        # with "Sign in to confirm you're not a bot", while the Android
+        # client usually does not. yt-dlp tries these in order and falls
+        # back to web if Android cannot serve a video, so no cookies are
+        # needed for most videos.
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"],
+            },
+        },
     }
     # If the user drops a browser-exported cookies.txt next to app.py,
     # yt-dlp uses it automatically. This is the standard fix when YouTube
