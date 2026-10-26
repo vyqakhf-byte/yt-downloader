@@ -92,13 +92,21 @@ def base_opts():
             },
         },
     }
-    # If the user drops a browser-exported cookies.txt next to app.py,
-    # yt-dlp uses it automatically. This is the standard fix when YouTube
-    # answers "Sign in to confirm you're not a bot" from a server IP.
-    cookiefile = os.path.join(BASE_DIR, "cookies.txt")
-    if os.path.exists(cookiefile):
+        # If a browser-exported cookies.txt is available, yt-dlp uses it.
+    # This is the standard fix when YouTube answers "Sign in to confirm)
+    # you're not a bot" from a server IP. Checked locations: next to
+    # app.py (local runs) and Render's secret-file directory.
+    cookiefile = None
+    for candidate in (
+        os.path.join(BASE_DIR, "cookies.txt"),
+        "/etc/secrets/cookies.txt",
+        os.environ.get("COOKIES_FILE", ""),
+    ):
+        if candidate and os.path.exists(candidate):
+            cookiefile = candidate
+            break
+    if cookiefile:
         opts["cookiefile"] = cookiefile
-    ffmpeg_location = _ffmpeg_location()
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
     return opts
